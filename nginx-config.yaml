@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+
+        location / {
+            default_type text/html;
+            return 200 '<!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Pod Info</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #f0f0f0;
+                        }
+                        .container {
+                            text-align: center;
+                            padding: 20px;
+                            border-radius: 8px;
+                            background-color: white;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                        }
+                        .pod-name {
+                            color: #2196F3;
+                            font-size: 24px;
+                            margin-bottom: 10px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="pod-name">Pod: $hostname</div>
+                    </div>
+                </body>
+                </html>';
+        }
+
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+        }
+    }
