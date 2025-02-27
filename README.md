@@ -178,6 +178,48 @@ kubectl get ingress
 kubectl get svc -n ingress-nginx
 ```
 
+## Performance Optimizations
+
+The cluster is optimized for performance and reliability:
+
+### 1. Ingress Controller Tuning
+- Optimized proxy timeouts and buffer sizes
+- GZIP compression for faster content delivery
+- Modern SSL ciphers for security and performance
+- Efficient proxy buffering configuration
+
+### 2. Deployment Optimizations
+- Pod anti-affinity for high availability
+- Zero-downtime rolling updates
+- Resource limits and requests
+- Optimized health check probes
+- Pod distribution across nodes
+
+### 3. NGINX Performance Tuning
+- Connection keepalive optimization
+- Buffer size tuning
+- GZIP compression
+- File handle caching
+- Client buffer optimizations
+
+### 4. Monitoring and Health
+- Resource usage monitoring via `kubectl top`
+- Health check endpoints
+- Readiness/Liveness probes
+- Performance metrics collection
+
+To monitor cluster performance:
+```bash
+# View pod resource usage
+kubectl top pods
+
+# Check pod distribution
+kubectl get pods -o wide
+
+# View detailed pod information
+kubectl describe pods
+```
+
 ## Troubleshooting
 
 1. If pods aren't receiving traffic:
@@ -191,6 +233,34 @@ kubectl get svc -n ingress-nginx
    - Check logs: `kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller`
 
 ## Security Considerations
+
+#### Security Layer (TLS/HTTPS)
+
+The application is secured using TLS/HTTPS:
+
+- **TLS Configuration**:
+  - Self-signed certificate for `webserver.local`
+  - Stored in Kubernetes Secret `webserver-tls`
+  - Automatic HTTP to HTTPS redirection
+  - HTTP Strict Transport Security (HSTS) enabled
+
+- **Security Features**:
+  - TLSv1.3 protocol
+  - Modern cipher suites
+  - Force SSL redirect
+  - HTTP/2 support for better performance
+
+To test locally:
+1. Add to `/etc/hosts`:
+   ```
+   127.0.0.1 webserver.local
+   ```
+2. Access via HTTPS:
+   ```bash
+   curl -k https://webserver.local:8443
+   ```
+
+Note: In production, replace the self-signed certificate with a valid certificate from a trusted CA.
 
 1. The setup includes:
    - Resource limits on pods
@@ -230,3 +300,224 @@ kubectl get svc -n ingress-nginx
 5. Keep configurations in version control
 6. Use namespaces for isolation
 7. Implement proper logging and monitoring
+
+# Kubernetes NGINX Ingress with TLS and Load Balancing
+
+A production-ready Kubernetes setup demonstrating NGINX Ingress Controller with TLS termination, load balancing, and high availability.
+
+## Architecture Overview
+
+```
+Client Request → NGINX Ingress → Service → Pods (3 replicas)
+    (HTTPS)     (TLS/LoadBalancer)  (ClusterIP)  (Web Servers)
+```
+
+## Features
+
+- Load Balancing (Service & Ingress levels)
+- TLS/HTTPS with automatic redirection
+- High Availability (3 replicas)
+- Performance optimizations
+- Health monitoring
+- Zero-downtime deployments
+
+## Components
+
+### 1. Web Server Deployment
+- 3 NGINX pod replicas
+- Resource limits and requests
+- Health checks (readiness/liveness)
+- Pod anti-affinity for HA
+- Rolling update strategy
+
+### 2. Service Layer
+- Type: ClusterIP
+- Internal load balancing
+- Pod health tracking
+- Automatic endpoint updates
+
+### 3. Ingress Controller
+- TLS termination
+- HTTP → HTTPS redirect
+- Advanced routing
+- Performance tuning
+- GZIP compression
+
+### 4. Security Layer
+- TLSv1.3 protocol
+- Modern cipher suites
+- HSTS enabled
+- HTTP/2 support
+
+## Performance Optimizations
+
+### NGINX Configuration
+- Connection keepalive
+- Buffer size tuning
+- GZIP compression
+- File handle caching
+- Client buffer optimizations
+
+### Kubernetes Tuning
+- Pod anti-affinity
+- Resource management
+- Zero-downtime updates
+- Health probe optimization
+- Load distribution
+
+## Installation
+
+1. Deploy NGINX Ingress Controller:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
+```
+
+2. Create TLS certificate:
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout tls.key -out tls.crt -subj "/CN=webserver.local"
+```
+
+3. Create Kubernetes Secret:
+```bash
+kubectl create secret tls webserver-tls --key tls.key --cert tls.crt
+```
+
+4. Deploy the application:
+```bash
+kubectl apply -f nginx-config.yaml
+kubectl apply -f webserver-deployment.yaml
+kubectl apply -f webserver-service.yaml
+kubectl apply -f ingress.yaml
+```
+
+## Configuration Files
+
+### nginx-config.yaml
+- NGINX server configuration
+- Performance optimizations
+- Health check endpoint
+- Custom HTML response
+
+### webserver-deployment.yaml
+- Pod specifications
+- Resource limits
+- Health probes
+- Volume mounts
+- Update strategy
+
+### ingress.yaml
+- TLS configuration
+- Routing rules
+- Performance annotations
+- Security headers
+
+## Testing
+
+1. Add to `/etc/hosts`:
+```
+127.0.0.1 webserver.local
+```
+
+2. Test HTTPS:
+```bash
+curl -k https://webserver.local:8443
+```
+
+3. Verify HTTP redirect:
+```bash
+curl -L http://webserver.local:8080
+```
+
+4. Check health endpoint:
+```bash
+curl -k https://webserver.local:8443/health
+```
+
+## Monitoring
+
+### Resource Usage
+```bash
+# Pod resource consumption
+kubectl top pods
+
+# Pod distribution
+kubectl get pods -o wide
+```
+
+### Health Checks
+```bash
+# Pod status
+kubectl get pods
+
+# Detailed pod info
+kubectl describe pods
+```
+
+### Logs
+```bash
+# Ingress controller logs
+kubectl logs -n ingress-nginx deploy/ingress-nginx-controller
+
+# Web server logs
+kubectl logs -l app=webserver
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. Pod Startup Issues
+- Check volume mounts
+- Verify ConfigMap keys
+- Review resource limits
+- Check health probe settings
+
+2. TLS Issues
+- Verify secret exists
+- Check certificate validity
+- Confirm Ingress TLS config
+- Review HTTPS redirect settings
+
+3. Load Balancing Issues
+- Check service endpoints
+- Verify pod readiness
+- Review anti-affinity rules
+- Check node distribution
+
+## Security Considerations
+
+1. TLS Configuration
+- Modern protocols (TLSv1.2, TLSv1.3)
+- Secure cipher suites
+- HSTS enabled
+- Automatic HTTPS redirect
+
+2. Resource Protection
+- Memory limits
+- CPU constraints
+- Network policies
+- Health monitoring
+
+## Production Readiness
+
+Before deploying to production:
+1. Replace self-signed certificate with valid SSL
+2. Adjust resource limits based on load
+3. Configure proper monitoring
+4. Set up logging aggregation
+5. Implement backup strategy
+
+## Maintenance
+
+### Updates
+- Use rolling updates
+- Monitor pod health
+- Check resource usage
+- Review logs regularly
+
+### Scaling
+- Adjust replica count
+- Monitor resource usage
+- Update resource limits
+- Check node capacity

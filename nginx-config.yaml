@@ -8,44 +8,68 @@ data:
         listen 80;
         server_name localhost;
 
+        # Optimize connection handling
+        keepalive_timeout 65;
+        keepalive_requests 100;
+
+        # Buffer settings
+        client_body_buffer_size 10K;
+        client_header_buffer_size 1k;
+        client_max_body_size 8m;
+        large_client_header_buffers 2 1k;
+
+        # Compression
+        gzip on;
+        gzip_min_length 1000;
+        gzip_proxied expired no-cache no-store private auth;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+        # File handle caching
+        open_file_cache max=1000 inactive=20s;
+        open_file_cache_valid 30s;
+        open_file_cache_min_uses 2;
+        open_file_cache_errors on;
+
         location / {
+            # Display pod information
             default_type text/html;
             return 200 '<!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Pod Info</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            height: 100vh;
-                            margin: 0;
-                            background-color: #f0f0f0;
-                        }
-                        .container {
-                            text-align: center;
-                            padding: 20px;
-                            border-radius: 8px;
-                            background-color: white;
-                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                        }
-                        .pod-name {
-                            color: #2196F3;
-                            font-size: 24px;
-                            margin-bottom: 10px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="pod-name">Pod: $hostname</div>
-                    </div>
-                </body>
-                </html>';
+            <html>
+            <head>
+                <title>Pod Info</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                        background-color: #f0f0f0;
+                    }
+                    .container {
+                        text-align: center;
+                        padding: 20px;
+                        border-radius: 8px;
+                        background-color: white;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+                    .pod-name {
+                        color: #2196F3;
+                        font-size: 24px;
+                        margin-bottom: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="pod-name">Pod: $hostname</div>
+                </div>
+            </body>
+            </html>';
         }
 
+        # Health check endpoint
         location /health {
             access_log off;
             return 200 "healthy\n";
