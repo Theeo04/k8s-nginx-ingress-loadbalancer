@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PORT=8080
+PORT=8443
 NUM_REQUESTS=10
 
 echo "Testing Ingress load balancing..."
@@ -11,7 +11,7 @@ echo
 pkill -f "port-forward" || true
 
 # Start port-forward to ingress controller
-kubectl port-forward -n ingress-nginx service/ingress-nginx-controller $PORT:80 &
+kubectl port-forward -n ingress-nginx service/ingress-nginx-controller $PORT:443 &
 sleep 2  # Wait for port-forward to establish
 
 # Function to make a request
